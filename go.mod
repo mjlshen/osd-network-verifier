@@ -9,11 +9,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.6.4
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.24.0
 	github.com/aws/smithy-go v1.9.0
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/mock v1.6.0
-	github.com/openshift-online/ocm-sdk-go v0.1.224
-	github.com/spf13/cobra v1.4.0
-	github.com/spf13/pflag v1.0.5
+	github.com/go-logr/logr v1.2.3
+	github.com/go-logr/zapr v1.2.3
+	github.com/openshift-online/ocm-cli v0.1.64
+	github.com/openshift-online/ocm-sdk-go v0.1.273
+	go.uber.org/zap v1.19.0
 	golang.org/x/oauth2 v0.0.0-20220608161450-d0670ef3b1eb
 	google.golang.org/api v0.84.0
 )

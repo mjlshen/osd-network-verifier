@@ -3,20 +3,16 @@ package main
 import (
 	"flag"
 	"os"
-
-	"github.com/openshift/osd-network-verifier/cmd"
-	"github.com/spf13/pflag"
 )
 
 func main() {
-	flags := pflag.NewFlagSet("osd-network-verifier", pflag.ExitOnError)
-
-	if err := flag.CommandLine.Parse([]string{}); err != nil {
-		os.Exit(1)
+	f := flag.NewFlagSet(os.Args[0], flag.ExitOnError)
+	clusterId := f.String("cluster-id", "", "OCM internal or external cluster id")
+	if err := f.Parse(os.Args[1:]); err != nil {
+		panic(err)
 	}
-	pflag.CommandLine = flags
 
-	if err := cmd.NewCmdRoot().Execute(); err != nil {
-		os.Exit(1)
+	if *clusterId == "" {
+		panic("cluster id must not be empty")
 	}
 }
