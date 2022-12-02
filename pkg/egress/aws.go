@@ -253,7 +253,7 @@ func (a *AwsEgressVerifier) findUnreachableEndpoints(ctx context.Context, instan
 		if consoleOutput.Output != nil {
 			// In the early stages, an ec2 instance may be running but the console is not populated with any data
 			if len(*consoleOutput.Output) == 0 {
-				a.log.Info("EC2 console Output not yet populated with data, continuing to wait...")
+				a.log.V(1).Info("Console output not yet populated with data, continuing to wait...")
 				return false, nil
 			}
 
@@ -273,7 +273,7 @@ func (a *AwsEgressVerifier) findUnreachableEndpoints(ctx context.Context, instan
 			// It is possible we get EC2 console consoleOutput, but the userdata script has not yet completed.
 			userDataComplete := reUserDataComplete.FindString(consoleLogs)
 			if len(userDataComplete) < 1 {
-				a.log.Info("EC2 console output contains data, but end of userdata script not seen, continuing to wait...")
+				a.log.V(1).Info("Console output contains data, but end of userdata script not seen, continuing to wait...")
 				return false, nil
 			}
 
