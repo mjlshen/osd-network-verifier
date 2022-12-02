@@ -55,6 +55,10 @@ type AwsEgressVerifier struct {
 	log logr.Logger
 }
 
+func (a *AwsEgressVerifier) String() string {
+	return fmt.Sprintf("Ec2Config: %+v\nProxy: %+v\nRegion: %s", a.Ec2Config, a.Proxy, a.region)
+}
+
 // NewDefaultAwsEgressVerifier assembles an AwsEgressVerifier given an aws-sdk-go-v2 Config
 func NewDefaultAwsEgressVerifier(cfg aws.Config) (*AwsEgressVerifier, error) {
 	zapLog, err := zap.NewDevelopment()

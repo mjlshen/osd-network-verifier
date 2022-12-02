@@ -91,6 +91,7 @@ func (a *AwsEgressVerifier) Validate(ctx context.Context) error {
 		return err
 	}
 
+	a.log.Info("Egress validation successful!")
 	return nil
 }
 
@@ -133,6 +134,8 @@ func (a *AwsEgressVerifier) createTags(ctx context.Context, tags map[string]stri
 
 // TerminateEC2Instance terminates target ec2 instance and waits up to 5 minutes for the instance to be terminated
 func (a *AwsEgressVerifier) terminateEC2Instance(ctx context.Context, instanceID string) error {
+	a.log.Info("Terminating instance", "instance", instanceID)
+
 	if _, err := a.AwsClient.TerminateInstances(ctx, &ec2.TerminateInstancesInput{
 		InstanceIds: []string{instanceID},
 	}); err != nil {
@@ -325,6 +328,8 @@ func buildTags(tags map[string]string) []types.Tag {
 // generateUserData generates the userData file
 // All ${var} (using empty string for unknown ones) will be replaced, using the env variables used in userdata.yaml
 func (a *AwsEgressVerifier) generateUserData() (string, error) {
+	a.log.V(1).Info("Generating userdata")
+
 	userDataVariables := map[string]string{
 		"AWS_REGION":               a.region,
 		"USERDATA_BEGIN":           "USERDATA BEGIN",
