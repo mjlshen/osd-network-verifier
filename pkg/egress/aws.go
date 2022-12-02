@@ -73,22 +73,6 @@ func (a *AwsEgressVerifier) Validate(ctx context.Context) error {
 		return err
 	}
 
-	//cleanupSecurityGroup := false
-	//if vei.AWS.SecurityGroupId == "" {
-	//	vpcId, err := a.GetVpcIdFromSubnetId(ctx, vei.SubnetID)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	//	createSecurityGroupOutput, err := a.CreateSecurityGroup(vei.Ctx, vei.Tags, "osd-network-verifier", vpcId)
-	//	if err != nil {
-	//		return a.Output.AddError(err)
-	//	}
-	//
-	//	vei.AWS.SecurityGroupId = *createSecurityGroupOutput.GroupId
-	//	cleanupSecurityGroup = true
-	//}
-
 	// Create EC2 instance
 	instanceID, err := a.createEC2Instance(ctx, userData)
 	if err != nil {
@@ -106,15 +90,6 @@ func (a *AwsEgressVerifier) Validate(ctx context.Context) error {
 	if err := a.terminateEC2Instance(ctx, *instanceID); err != nil {
 		return err
 	}
-
-	//if cleanupSecurityGroup {
-	//	_, err := a.AwsClient.DeleteSecurityGroup(vei.Ctx, &ec2.DeleteSecurityGroupInput{GroupId: awsTools.String(vei.AWS.SecurityGroupId)})
-	//	if err != nil {
-	//		a.Output.AddError(handledErrors.NewGenericError(err))
-	//		a.Output.AddException(handledErrors.NewGenericError(fmt.Errorf("unable to cleanup security group %s, please manually clean up", vei.AWS.SecurityGroupId)))
-	//
-	//	}
-	//}
 
 	return nil
 }
@@ -373,123 +348,3 @@ func (a *AwsEgressVerifier) generateUserData() (string, error) {
 
 	return base64.StdEncoding.EncodeToString([]byte(data)), nil
 }
-
-// GetVpcIdFromSubnetId takes in a subnet id and returns the associated VPC id
-//func (a *AwsEgressVerifier) GetVpcIdFromSubnetId(ctx context.Context, subnetID string) (*string, error) {
-//	resp, err := a.AwsClient.DescribeSubnets(ctx, &ec2.DescribeSubnetsInput{
-//		SubnetIds: []string{subnetID},
-//	})
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	if len(resp.Subnets) == 0 {
-//		return nil, fmt.Errorf("no subnets returned for subnet id: %s", subnetID)
-//	}
-//
-//	return resp.Subnets[0].VpcId, nil
-//}
-
-//func (a *AwsVerifier) writeDebugLogs(log string) {
-//	a.Output.AddDebugLogs(log)
-//	a.Logger.Debug(context.TODO(), log)
-//}
-
-//
-//// CreateSecurityGroup creates a security group with the specified name and cluster tag key in a specified VPC
-//func (a *AwsVerifier) CreateSecurityGroup(ctx context.Context, tags map[string]string, name, vpcId string) (*ec2.CreateSecurityGroupOutput, error) {
-//	input := &ec2.CreateSecurityGroupInput{
-//		GroupName:   awsTools.String(name + "-" + helpers.RandSeq(5)),
-//		VpcId:       &vpcId,
-//		Description: awsTools.String("osd-network-verifier security group"),
-//	}
-//	a.writeDebugLogs("Creating a Security group")
-//	output, err := a.AwsClient.CreateSecurityGroup(ctx, input)
-//	if err != nil {
-//		return &ec2.CreateSecurityGroupOutput{}, err
-//	}
-//
-//	a.writeDebugLogs(fmt.Sprintf("Waiting for the Security Group to exist: %s", *output.GroupId))
-//	// Wait up to 1 minutes for the security group to exist
-//	waiter := ec2.NewSecurityGroupExistsWaiter(a.AwsClient)
-//	if err := waiter.Wait(ctx, &ec2.DescribeSecurityGroupsInput{GroupIds: []string{*output.GroupId}}, 1*time.Minute); err != nil {
-//		a.writeDebugLogs(fmt.Sprintf("Error waiting for the security group to exist: %s, attempting to delete the Security Group", *output.GroupId))
-//		_, err := a.AwsClient.DeleteSecurityGroup(ctx, &ec2.DeleteSecurityGroupInput{GroupId: output.GroupId})
-//		if err != nil {
-//			return &ec2.CreateSecurityGroupOutput{}, handledErrors.NewGenericError(err)
-//		}
-//		return &ec2.CreateSecurityGroupOutput{}, fmt.Errorf("deleted %s after timing out waiting for security group to exist", *output.GroupId)
-//	}
-//
-//	a.Logger.Info(ctx, "Created security group with ID: %s", *output.GroupId)
-//	if err := a.createTags(tags, *output.GroupId); err != nil {
-//		// Unable to tag the instance
-//		_, err := a.AwsClient.DeleteSecurityGroup(ctx, &ec2.DeleteSecurityGroupInput{GroupId: output.GroupId})
-//		if err != nil {
-//			return &ec2.CreateSecurityGroupOutput{}, handledErrors.NewGenericError(err)
-//		}
-//		return &ec2.CreateSecurityGroupOutput{}, handledErrors.NewGenericError(err)
-//	}
-//
-//	input_rules := &ec2.AuthorizeSecurityGroupEgressInput{
-//		GroupId: output.GroupId,
-//		IpPermissions: []types.IpPermission{
-//			{
-//				FromPort:   awsTools.Int32(80),
-//				ToPort:     awsTools.Int32(80),
-//				IpProtocol: awsTools.String("tcp"),
-//				IpRanges: []types.IpRange{
-//					{
-//						CidrIp: awsTools.String("0.0.0.0/0"),
-//					},
-//				},
-//			},
-//			{
-//				FromPort:   awsTools.Int32(443),
-//				ToPort:     awsTools.Int32(443),
-//				IpProtocol: awsTools.String("tcp"),
-//				IpRanges: []types.IpRange{
-//					{
-//						CidrIp: awsTools.String("0.0.0.0/0"),
-//					},
-//				},
-//			},
-//			{
-//				FromPort:   awsTools.Int32(9997),
-//				ToPort:     awsTools.Int32(9997),
-//				IpProtocol: awsTools.String("tcp"),
-//				IpRanges: []types.IpRange{
-//					{
-//						CidrIp: awsTools.String("0.0.0.0/0"),
-//					},
-//				},
-//			},
-//		},
-//	}
-//
-//	if _, err := a.AwsClient.AuthorizeSecurityGroupEgress(ctx, input_rules); err != nil {
-//		return &ec2.CreateSecurityGroupOutput{}, err
-//	}
-//
-//	revoke_default_egress := &ec2.RevokeSecurityGroupEgressInput{
-//		GroupId: output.GroupId,
-//		IpPermissions: []types.IpPermission{
-//			{
-//				FromPort:   awsTools.Int32(-1),
-//				ToPort:     awsTools.Int32(-1),
-//				IpProtocol: awsTools.String("-1"),
-//				IpRanges: []types.IpRange{
-//					{
-//						CidrIp: awsTools.String("0.0.0.0/0"),
-//					},
-//				},
-//			},
-//		},
-//	}
-//
-//	if _, err := a.AwsClient.RevokeSecurityGroupEgress(ctx, revoke_default_egress); err != nil {
-//		return &ec2.CreateSecurityGroupOutput{}, err
-//	}
-//
-//	return output, nil
-//}
