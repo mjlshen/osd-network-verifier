@@ -62,6 +62,8 @@ const (
 // - find unreachable endpoints & parse output, then terminate instance
 // - return `a.output` which stores the execution results
 func (a *AwsEgressVerifier) Validate(ctx context.Context) error {
+	a.log.V(1).Info("Starting validation", "config", a)
+
 	if err := a.validateInstanceType(ctx, a.Ec2Config.InstanceType); err != nil {
 		return fmt.Errorf("instance type %s is invalid: %w", a.Ec2Config.InstanceType, err)
 	}
