@@ -73,6 +73,7 @@ func NewDefaultAwsEgressVerifier(cfg aws.Config) (*AwsEgressVerifier, error) {
 			InstanceType: "t3.micro",
 			Tags:         awsDefaultTags,
 		},
+		Proxy:     &Proxy{},
 		region:    cfg.Region,
 		timeout:   2 * time.Second,
 		AwsClient: ec2.NewFromConfig(cfg),

@@ -195,7 +195,7 @@ func (a *AwsEgressVerifier) createEC2Instance(ctx context.Context, userdata stri
 	}
 
 	for _, i := range instanceResp.Instances {
-		a.log.Info("Created instance: %s", *i.InstanceId)
+		a.log.Info("Created instance", "instance", *i.InstanceId)
 	}
 
 	if len(instanceResp.Instances) == 0 {
@@ -333,12 +333,19 @@ func (a *AwsEgressVerifier) generateUserData() (string, error) {
 		"VALIDATOR_END_VERIFIER":   "VALIDATOR END",
 		"VALIDATOR_IMAGE":          networkValidatorImage,
 		"TIMEOUT":                  a.timeout.String(),
-		"HTTP_PROXY":               a.Proxy.HttpProxy,
-		"HTTPS_PROXY":              a.Proxy.HttpsProxy,
-		"CACERT":                   base64.StdEncoding.EncodeToString([]byte(a.Proxy.Cacert)),
-		"NOTLS":                    strconv.FormatBool(a.Proxy.NoTls),
+		"HTTP_PROXY":               "",
+		"HTTPS_PROXY":              "",
+		"CACERT":                   "",
+		"NOTLS":                    "",
 		"IMAGE":                    "$IMAGE",
 		"VALIDATOR_REFERENCE":      "$VALIDATOR_REFERENCE",
+	}
+
+	if a.Proxy != nil {
+		userDataVariables["HTTP_PROXY"] = a.Proxy.HttpProxy
+		userDataVariables["HTTPS_PROXY"] = a.Proxy.HttpsProxy
+		userDataVariables["CACERT"] = base64.StdEncoding.EncodeToString([]byte(a.Proxy.Cacert))
+		userDataVariables["NOTLS"] = strconv.FormatBool(a.Proxy.NoTls)
 	}
 
 	variableMapper := func(varName string) string {
