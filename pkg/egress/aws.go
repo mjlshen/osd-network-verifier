@@ -232,7 +232,7 @@ func (a *AwsEgressVerifier) findUnreachableEndpoints(ctx context.Context, instan
 	reGenericFailure := regexp.MustCompile(`(?m)^(.*Cannot.*)|(.*Could not.*)|(.*Failed.*)|(.*command not found.*)`)
 	reDockerFailure := regexp.MustCompile(`(?m)(docker)`)
 
-	a.log.V(1).Info("Scraping console output and waiting for user data script to complete...")
+	a.log.Info("Scraping console output and waiting for user data script to complete...")
 
 	// Periodically scrape console output and analyze the logs for any errors or a successful completion
 	err := helpers.PollImmediate(30*time.Second, 4*time.Minute, func() (bool, error) {
@@ -247,7 +247,7 @@ func (a *AwsEgressVerifier) findUnreachableEndpoints(ctx context.Context, instan
 		if consoleOutput.Output != nil {
 			// In the early stages, an ec2 instance may be running but the console is not populated with any data
 			if len(*consoleOutput.Output) == 0 {
-				a.log.V(1).Info("EC2 console Output not yet populated with data, continuing to wait...")
+				a.log.Info("EC2 console Output not yet populated with data, continuing to wait...")
 				return false, nil
 			}
 
@@ -257,7 +257,7 @@ func (a *AwsEgressVerifier) findUnreachableEndpoints(ctx context.Context, instan
 			// The console consoleOutput starts out base64 encoded
 			scriptOutput, err := base64.StdEncoding.DecodeString(*consoleOutput.Output)
 			if err != nil {
-				a.log.V(1).Info(fmt.Sprintf("Error decoding console output, will retry on next check interval: %s", err))
+				a.log.Info(fmt.Sprintf("Error decoding console output, will retry on next check interval: %s", err))
 				return false, nil
 			}
 
@@ -267,7 +267,7 @@ func (a *AwsEgressVerifier) findUnreachableEndpoints(ctx context.Context, instan
 			// It is possible we get EC2 console consoleOutput, but the userdata script has not yet completed.
 			userDataComplete := reUserDataComplete.FindString(consoleLogs)
 			if len(userDataComplete) < 1 {
-				a.log.V(1).Info("EC2 console output contains data, but end of userdata script not seen, continuing to wait...")
+				a.log.Info("EC2 console output contains data, but end of userdata script not seen, continuing to wait...")
 				return false, nil
 			}
 
@@ -293,13 +293,13 @@ func (a *AwsEgressVerifier) findUnreachableEndpoints(ctx context.Context, instan
 			}
 
 			// If debug logging is enabled, consoleOutput the full console log that appears to include the full userdata run
-			a.log.V(1).Info(fmt.Sprintf("base64-encoded console logs:\n---\n%s\n---", b64ConsoleLogs))
+			a.log.V(2).Info(fmt.Sprintf("base64-encoded console logs:\n---\n%s\n---", b64ConsoleLogs))
 
 			return true, nil // finalize as there's `userdata end`
 		}
 
 		if len(b64ConsoleLogs) > 0 {
-			a.log.V(1).Info(fmt.Sprintf("base64-encoded console logs:\n---\n%s\n---", b64ConsoleLogs))
+			a.log.V(2).Info(fmt.Sprintf("base64-encoded console logs:\n---\n%s\n---", b64ConsoleLogs))
 		}
 
 		return false, nil
