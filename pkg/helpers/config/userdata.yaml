@@ -1,16 +1,12 @@
 #cloud-config
-repo_update: true
 write_files:
   - path: /run-container.sh
     permissions: 755
     content: |
       #!/bin/bash
-      # based on tls, set up docker run command.
       echo "${USERDATA_BEGIN}" >> /var/log/userdata-output
-      sudo docker pull ${VALIDATOR_IMAGE} || echo "Warning: could not pull the specified docker image, will try to use the prepulled one" >> /var/log/userdata-output
-      VALIDATOR_REFERENCE=`echo ${VALIDATOR_IMAGE} | cut -d : -f 1`
       # Retrieving the latest image successfully pulled (either from the script, or prepulled in the AMI)
-      IMAGE=`docker images ${VALIDATOR_REPO} -q  | head -n 2 | tail -n 1`
+      IMAGE=`docker images quay.io/app-sre/osd-network-verifier -q  | head -n 2 | tail -n 1`
       echo "Using IMAGE : $IMAGE" >> /var/log/userdata-output
       if [[ "${CACERT}" != "" ]]; then
         echo "${CACERT}" | base64 --decode > /proxy.pem
@@ -20,8 +16,8 @@ write_files:
       fi
       echo "${USERDATA_END}" >> /var/log/userdata-output
 runcmd:
-  - sudo service docker start 2>1 > /dev/null || echo "docker not started by systemctl"
-  - /run-container.sh
+  - sudo systemctl start docker 2>1 > /dev/null || echo "docker not started by systemctl"
+  - HTTP_PROXY=${HTTP_PROXY} HTTPS_PROXY=${HTTPS_PROXY} /run-container.sh
   - cat /var/log/userdata-output >/dev/console
 power_state:
   delay: ${DELAY}
